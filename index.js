@@ -29,6 +29,7 @@ let vertex = `
 let fragment = `
         varying vec2 v_uv;
         uniform sampler2D currentImage;
+        uniform sampler2D hoverImage;
         uniform vec2 u_res;
         uniform vec2 u_mouse;
         uniform float u_time;
@@ -146,15 +147,18 @@ let fragment = `
 
             vec2 uv = v_uv;
             vec4 _currentImage;
+            vec4 _hoverImage;
             float intensity = 0.3;
-            vec4 orig1 = texture2D(currentImage, uv);
+            _currentImage = texture2D(currentImage, uv);
+            _hoverImage = texture2D(hoverImage,uv);
             // _currentImage = texture2d(currentImage,vec2(uv.x,uv.y));
             // vec4 finalTexture = _currentImage;
             // gl_FragColor = orig1;
             // gl_FragColor = vec4(vec3(n),1.);
             float finalMask = smoothstep(0.4, 0.5, n + c);
-
-            gl_FragColor = vec4(vec3(finalMask), 1.);
+            vec4 finalImage = mix(_currentImage,_hoverImage,finalMask);
+            // gl_FragColor = vec4(vec3(finalMask), 1.);
+            gl_FragColor = finalImage;
         }
         `;
 var renderer = new THREE.WebGLRenderer();
@@ -169,7 +173,7 @@ var uniforms =  {
         type: "t", value: image,
         // dispFactor :{type : "f", value: 0.0}
     },
-    nextImage : {
+    hoverImage : {
         type: "t", value: image2
     },
     u_mouse: {type: "t",value: mouse},
