@@ -2,53 +2,62 @@ import * as THREE from "three";
 import img from "./img.jpg"
 import {TweenMax} from 'gsap'
 var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
 
-// camera.position.z = 1;
+scene.add( camera );
+camera.position.z = 1;
+scene.background = new THREE.Color( 0x23272A );
+let vertex = `
+        varying vec2 v_uv;
+        void main() {
+          v_uv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+    `;
+let fragment = `
+        varying vec2 v_uv;
+        uniform sampler2D currentImage;
+        void main(){
+            vec2 uv = v_uv;
+            vec4 _currentImage;
+            float intensity = 0.3;
+            vec4 orig1 = texture2D(currentImage, uv);
+            // _currentImage = texture2d(currentImage,vec2(uv.x,uv.y));
+            // vec4 finalTexture = _currentImage;
+            gl_FragColor = orig1;
+        }
+        `;
 var renderer = new THREE.WebGLRenderer();
-var planematerial
-let TEXTURE = new THREE.TextureLoader().load(img,
-function(texture){
-    console.log("textureloaded")
-    planematerial = new THREE.MeshBasicMaterial({
-        map:texture
-    })
-    let mesh = new THREE.Mesh(
-        new THREE.PlaneBufferGeometry(4,3,1,1), 
-        planematerial
-    )
-    scene.add(mesh)
-    console.log(planematerial)
-    function animate() {
-        requestAnimationFrame( animate );
-    
-        renderer.render( scene, camera );
-    }
-    animate();
-    
-    var mouse = new THREE.Vector2(0, 0)
-    window.addEventListener('mousemove', function(ev){
-        onMouseMove(ev)
-    })
-    
-    
-    function onMouseMove(event) {
-        TweenMax.to(mouse, 0.5, {
-            x: (event.clientX / window.innerWidth) * 2 - 1,
-            y: -(event.clientY / window.innerHeight) * 2 + 1,
-        })
-        console.log(mouse)
-        TweenMax.to(mesh.rotation, 0.5, {
-            x: -mouse.y * 1.2,
-            y: mouse.x * (Math.PI / 6)* 5
-        })
-    }
-},undefined,
-(err)=>{
-console.log("an err happened", err)
-}
-); 
-camera.position.z = 4;
-renderer.setSize( window.innerWidth, window.innerHeight );
+renderer.setSize( window.innerWidth / 2, window.innerHeight /2 );
+
+let loader = new THREE.TextureLoader();
+loader.crossOrigin = "anonymous";
+var image = loader.load(img)
+
+let mat = new THREE.ShaderMaterial({
+    uniforms: {
+        currentImage : {
+            type: "t", value: image,
+            // dispFactor :{type : "f", value: 0.0}
+        }
+    },
+    vertexShader: vertex,
+    fragmentShader : fragment,
+    // transparent: true,
+    // opacity: 1.0
+})
+let geometry = new THREE.PlaneBufferGeometry(800,600,32)
+
+let object = new THREE.Mesh(geometry, mat);
+
+// object.position.set(0,0,0);
+scene.add(object);
+let animate = function() {
+    requestAnimationFrame(animate);
+
+    renderer.render(scene, camera);
+};
+animate();
+
 document.body.appendChild( renderer.domElement );
 
