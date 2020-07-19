@@ -14,42 +14,6 @@ canvas {
     </head>
 <body>
   <script src="./index.js"></script>
-  <script type="x-shader/x-vertex" id="vertexShader">  
-    varying vec2 v_uv;
-
-void main() {
-	v_uv = uv;
-
-	gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-  </script>
-  
-  <script type="x-shader/x-fragment" id="fragmentShader">  
-    uniform vec2 u_mouse;
-    uniform vec2 u_res;
-    uniform sampler2D u_image;
-    varying vec2 v_uv;
-    
-    void main() {
-        vec4 image = texture2D(u_image, v_uv);
-        // We manage the device ratio by passing PR constant
-        vec2 res = u_res * PR;
-        vec2 st = gl_FragCoord.xy / res.xy - vec2(0.5);
-        // tip: use the following formula to keep the good ratio of your coordinates
-        st.y *= u_res.y / u_res.x;
-        gl_FragColor = image;
-        // We readjust the mouse coordinates
-    //    vec2 mouse = u_mouse * -0.5;
-        // tip2: do the same for your mouse
-      //  mouse.y *= u_res.y / u_res.x;
-  //      mouse *= -1.;
-    
-    //    vec2 circlePos = st + mouse;
-     //   float c = circle(circlePos, .03, 2.);
-    
-    //    gl_FragColor = vec4(vec3(c), 1.);
-    }
-  </script>  
   <div class="item">
     <!-- <img src="img.jpg" class="js-image" alt=""> -->
     <!-- <h2>Some title</h2>
