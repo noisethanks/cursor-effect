@@ -2,23 +2,8 @@ import * as THREE from "three";
 import {gsap} from "gsap"; 
 import img from "./img.jpg"
 import img2 from "./img2.jpg"
-import {TweenMax} from 'gsap'
-var scene = new THREE.Scene();
-var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+import {TweenMax} from 'gsap';
 
-var mouse = new THREE.Vector2(0, 0)
-document.body.addEventListener('mousemove', (ev) => { onMouseMove(ev) })
-function onMouseMove(event) {
-	TweenMax.to(mouse, 0.5, {
-		x: (event.clientX / window.innerWidth) * 2 - 1,
-		y: -(event.clientY / window.innerHeight) * 2 + 1,
-    })
-    // console.log(mouse);
-}
-
-scene.add( camera );
-camera.position.z = 1;
-scene.background = new THREE.Color( 0x23272A );
 let vertex = `
         varying vec2 v_uv;
         void main() {
@@ -161,6 +146,27 @@ let fragment = `
             gl_FragColor = finalImage;
         }
         `;
+
+var scene = new THREE.Scene();
+scene.background = new THREE.Color( 0x23272A );
+var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+camera.position.z = 1;
+scene.add( camera );
+
+
+var mouse = new THREE.Vector2(0, 0)
+document.body.addEventListener('mousemove', (ev) => { onMouseMove(ev) })
+function onMouseMove(event) {
+	TweenMax.to(mouse, 0.5, {
+		x: (event.clientX / window.innerWidth) * 2 - 1,
+		y: -(event.clientY / window.innerHeight) * 2 + 1,
+    })
+    // console.log(mouse);
+}
+
+
+
+
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight);
 
@@ -168,6 +174,7 @@ let loader = new THREE.TextureLoader();
 loader.crossOrigin = "anonymous";
 var image = loader.load(img)
 var image2 = loader.load(img2)
+
 var uniforms =  {
     currentImage : {
         type: "t", value: image,
@@ -180,6 +187,7 @@ var uniforms =  {
     u_time: {value: 0},
     u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
 };
+
 let mat = new THREE.ShaderMaterial({
     uniforms: uniforms,
     vertexShader: vertex,
@@ -193,12 +201,13 @@ let mat = new THREE.ShaderMaterial({
 let geometry = new THREE.PlaneBufferGeometry(window.innerWidth,window.innerHeight,)
 
 let object = new THREE.Mesh(geometry, mat);
+scene.add(object);
 
 function update() {
 	uniforms.u_time.value += 0.01
 }
 // object.position.set(0,0,0);
-scene.add(object);
+
 let animate = function() {
     requestAnimationFrame(animate);
     update()
