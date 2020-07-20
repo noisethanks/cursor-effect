@@ -4,6 +4,12 @@ import img from "./img.jpg"
 import img2 from "./img2.jpg"
 import {TweenMax} from 'gsap';
 
+import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+			import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+			import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
+			import { BloomPass } from './node_modules/three/examples/jsm/postprocessing/BloomPass.js';
+			import { CopyShader } from './node_modules/three/examples/jsm/shaders/CopyShader.js';
+
 let vertex = `
         varying vec2 v_uv;
         void main() {
@@ -164,9 +170,13 @@ function onMouseMove(event) {
     // console.log(mouse);
 }
 
+var video = document.createElement('video');
+video.src = "https://elp-media-public.s3-us-west-1.amazonaws.com/splash.m4v"
+video.style = "width:100%;height:100%;display:none";
+video.autoplay = true;
+document.body.appendChild(video);
 
-
-
+// var renderer = new THREE.WebGLRenderer({alpha:true});
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight);
 
@@ -174,6 +184,11 @@ let loader = new THREE.TextureLoader();
 loader.crossOrigin = "anonymous";
 var image = loader.load(img)
 var image2 = loader.load(img2)
+var videoTexture = THREE.VideoTexture(video)
+
+// videoTexture.minFilter = THREE.LinearFilter;
+// videoTexture.magFilter = THREE.LinearFilter;
+// videoTexture.format = THREE.RGBFormat;
 
 var uniforms =  {
     currentImage : {
@@ -181,7 +196,7 @@ var uniforms =  {
         // dispFactor :{type : "f", value: 0.0}
     },
     hoverImage : {
-        type: "t", value: image2
+        type: "t", value: videoTexture
     },
     u_mouse: {type: "t",value: mouse},
     u_time: {value: 0},
@@ -206,12 +221,28 @@ scene.add(object);
 function update() {
 	uniforms.u_time.value += 0.01
 }
+
+var renderModel = new RenderPass( scene, camera );
+var effectBloom = new BloomPass( 1.3 );
+var effectCopy = new ShaderPass( CopyShader );
+
+var composer = new EffectComposer( renderer );
+
+composer.addPass( renderModel );
+// composer.addPass( effectBloom );
+composer.addPass( effectCopy );
 // object.position.set(0,0,0);
+
+let render = function(){
+    // renderer.clear();
+	composer.render();
+}
 
 let animate = function() {
     requestAnimationFrame(animate);
     update()
-    renderer.render(scene, camera);
+    // renderer.render(scene, camera);
+    render()
 };
 animate();
 
