@@ -3,6 +3,7 @@ import {gsap} from "gsap";
 import img from "./img.jpg"
 import img2 from "./img2.jpg"
 import {TweenMax} from 'gsap';
+import { VideoTexture } from "three";
 
 let vertex = `
         varying vec2 v_uv;
@@ -136,13 +137,9 @@ let fragment = `
             float intensity = 0.3;
             _currentImage = texture2D(currentImage, uv);
             _hoverImage = texture2D(hoverImage,uv);
-            // _currentImage = texture2d(currentImage,vec2(uv.x,uv.y));
-            // vec4 finalTexture = _currentImage;
-            // gl_FragColor = orig1;
-            // gl_FragColor = vec4(vec3(n),1.);
+            // _hoverImage  = vec4(0.0,0.0,0.0,0.0);
             float finalMask = smoothstep(0.4, 0.5, n + c);
             vec4 finalImage = mix(_currentImage,_hoverImage,finalMask);
-            // gl_FragColor = vec4(vec3(finalMask), 1.);
             gl_FragColor = finalImage;
         }
         `;
@@ -164,10 +161,19 @@ function onMouseMove(event) {
     // console.log(mouse);
 }
 
+var video = document.createElement("video")
+video.src = 'https://elp-media-public.s3-us-west-1.amazonaws.com/splash.m4v';
+video.id = "video";
+video.style = "width:100%;height:100%;display:none";
+// video.style = "width:100%;height:100%";
+// video.play();
 
+document.body.appendChild(video)
 
+// var videoTexture = THREE.VideoTexture(video);
+// console.log(videoTexture)
 
-var renderer = new THREE.WebGLRenderer();
+var renderer = new THREE.WebGLRenderer({alpha:true});
 renderer.setSize( window.innerWidth, window.innerHeight);
 
 let loader = new THREE.TextureLoader();
@@ -209,9 +215,11 @@ function update() {
 // object.position.set(0,0,0);
 
 let animate = function() {
+
     requestAnimationFrame(animate);
     update()
     renderer.render(scene, camera);
+
 };
 animate();
 
