@@ -3,7 +3,7 @@ import {gsap} from "gsap";
 import img from "./img.jpg"
 import img2 from "./img2.jpg"
 import {TweenMax} from 'gsap';
-
+import vid from "./splash.m4v"
 import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
 			import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
 			import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
@@ -171,11 +171,11 @@ function onMouseMove(event) {
 }
 
 var video = document.createElement('video');
-video.src = "https://elp-media-public.s3-us-west-1.amazonaws.com/splash.m4v"
+video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v"
 video.style = "width:100%;height:100%;display:none";
 video.autoplay = true;
 document.body.appendChild(video);
-
+video.setAttribute("crossorigin", "anonymous");
 // var renderer = new THREE.WebGLRenderer({alpha:true});
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight);
