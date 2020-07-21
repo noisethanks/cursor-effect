@@ -1,14 +1,15 @@
 import * as THREE from "three";
-import {gsap} from "gsap"; 
-import img from "./img.jpg"
-import img2 from "./img2.jpg"
-import {TweenMax} from 'gsap';
-import vid from "./splash.m4v"
-import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
-			import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
-			import { ShaderPass } from './node_modules/three/examples/jsm/postprocessing/ShaderPass.js';
-			import { BloomPass } from './node_modules/three/examples/jsm/postprocessing/BloomPass.js';
-			import { CopyShader } from './node_modules/three/examples/jsm/shaders/CopyShader.js';
+import { gsap } from "gsap";
+import img from "./img.jpg";
+import img2 from "./img2.jpg";
+import { TweenMax } from "gsap";
+
+import { EffectComposer } from "./node_modules/three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "./node_modules/three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "./node_modules/three/examples/jsm/postprocessing/ShaderPass.js";
+import { BloomPass } from "./node_modules/three/examples/jsm/postprocessing/BloomPass.js";
+import { CopyShader } from "./node_modules/three/examples/jsm/shaders/CopyShader.js";
+import { VideoTexture } from "three";
 
 let vertex = `
         varying vec2 v_uv;
@@ -154,97 +155,112 @@ let fragment = `
         `;
 
 var scene = new THREE.Scene();
-scene.background = new THREE.Color( 0x23272A );
-var camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
+scene.background = new THREE.Color(0x23272a);
+var camera = new THREE.OrthographicCamera(
+  window.innerWidth / -2,
+  window.innerWidth / 2,
+  window.innerHeight / 2,
+  window.innerHeight / -2,
+  1,
+  1000
+);
 camera.position.z = 1;
-scene.add( camera );
+scene.add(camera);
 
-
-var mouse = new THREE.Vector2(0, 0)
-document.body.addEventListener('mousemove', (ev) => { onMouseMove(ev) })
+var mouse = new THREE.Vector2(0, 0);
+document.body.addEventListener("mousemove", ev => {
+  onMouseMove(ev);
+});
 function onMouseMove(event) {
-	TweenMax.to(mouse, 0.5, {
-		x: (event.clientX / window.innerWidth) * 2 - 1,
-		y: -(event.clientY / window.innerHeight) * 2 + 1,
-    })
-    // console.log(mouse);
+  TweenMax.to(mouse, 0.5, {
+    x: (event.clientX / window.innerWidth) * 2 - 1,
+    y: -(event.clientY / window.innerHeight) * 2 + 1
+  });
+  // console.log(mouse);
 }
 
-var video = document.createElement('video');
-video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v"
+var video = document.createElement("video");
+video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v";
 video.style = "width:100%;height:100%;display:none";
 video.autoplay = true;
-document.body.appendChild(video);
+video.preload = "auto";
+video.autoload = "true";
 video.setAttribute("crossorigin", "anonymous");
+document.body.appendChild(video);
+
 // var renderer = new THREE.WebGLRenderer({alpha:true});
 var renderer = new THREE.WebGLRenderer();
-renderer.setSize( window.innerWidth, window.innerHeight);
+renderer.setSize(window.innerWidth, window.innerHeight);
 
 let loader = new THREE.TextureLoader();
 loader.crossOrigin = "anonymous";
-var image = loader.load(img)
-var image2 = loader.load(img2)
-var videoTexture = THREE.VideoTexture(video)
+var image = loader.load(img);
+// var image2 = loader.load(img2);
+var videoTexture = new THREE.VideoTexture(video);
 
 // videoTexture.minFilter = THREE.LinearFilter;
 // videoTexture.magFilter = THREE.LinearFilter;
 // videoTexture.format = THREE.RGBFormat;
 
-var uniforms =  {
-    currentImage : {
-        type: "t", value: image,
-        // dispFactor :{type : "f", value: 0.0}
-    },
-    hoverImage : {
-        type: "t", value: videoTexture
-    },
-    u_mouse: {type: "t",value: mouse},
-    u_time: {value: 0},
-    u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+var uniforms = {
+  currentImage: {
+    type: "t",
+    value: image
+    // dispFactor :{type : "f", value: 0.0}
+  },
+  hoverImage: {
+    type: "t",
+    value: videoTexture
+  },
+  u_mouse: { type: "t", value: mouse },
+  u_time: { value: 0 },
+  u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
 };
 
 let mat = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    vertexShader: vertex,
-    fragmentShader : fragment,
-    defines: {
-        PR: window.devicePixelRatio.toFixed(1)
-   }
-    // transparent: true,
-    // opacity: 1.0
-})
-let geometry = new THREE.PlaneBufferGeometry(window.innerWidth,window.innerHeight,)
+  uniforms: uniforms,
+  vertexShader: vertex,
+  fragmentShader: fragment,
+  defines: {
+    PR: window.devicePixelRatio.toFixed(1)
+  }
+  // transparent: true,
+  // opacity: 1.0
+});
+let geometry = new THREE.PlaneBufferGeometry(
+  window.innerWidth,
+  window.innerHeight
+);
 
 let object = new THREE.Mesh(geometry, mat);
 scene.add(object);
 
 function update() {
-	uniforms.u_time.value += 0.01
+  uniforms.u_time.value += 0.01;
 }
 
-var renderModel = new RenderPass( scene, camera );
-var effectBloom = new BloomPass( 1.3 );
-var effectCopy = new ShaderPass( CopyShader );
+var renderModel = new RenderPass(scene, camera);
+var effectBloom = new BloomPass(1.3);
+var effectCopy = new ShaderPass(CopyShader);
 
-var composer = new EffectComposer( renderer );
+var composer = new EffectComposer(renderer);
 
-composer.addPass( renderModel );
+composer.addPass(renderModel);
 // composer.addPass( effectBloom );
-composer.addPass( effectCopy );
+composer.addPass(effectCopy);
 // object.position.set(0,0,0);
 
-let render = function(){
-    // renderer.clear();
-	composer.render();
-}
+let render = function() {
+  // renderer.clear();
+  composer.render();
+};
 
 let animate = function() {
-    requestAnimationFrame(animate);
-    update()
-    // renderer.render(scene, camera);
-    render()
+  requestAnimationFrame(animate);
+  update();
+  // renderer.render(scene, camera);
+  render();
 };
 animate();
 
-document.body.appendChild( renderer.domElement );
-
+document.body.appendChild(renderer.domElement);
