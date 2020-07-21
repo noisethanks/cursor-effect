@@ -10,6 +10,7 @@ import { ShaderPass } from "./node_modules/three/examples/jsm/postprocessing/Sha
 import { BloomPass } from "./node_modules/three/examples/jsm/postprocessing/BloomPass.js";
 import { CopyShader } from "./node_modules/three/examples/jsm/shaders/CopyShader.js";
 import { VideoTexture } from "three";
+import 'regenerator-runtime/runtime'
 
 let vertex = `
         varying vec2 v_uv;
@@ -153,10 +154,11 @@ let fragment = `
             gl_FragColor = finalImage;
         }
         `;
-
-var scene = new THREE.Scene();
-scene.background = new THREE.Color(0x23272a);
-var camera = new THREE.OrthographicCamera(
+var init = new Promise((resolve,reject)=>{
+    var data = {};
+    data.scene = new THREE.Scene();
+    data.scene.background = new THREE.Color(0x23272a);
+data.camera = new THREE.OrthographicCamera(
   window.innerWidth / -2,
   window.innerWidth / 2,
   window.innerHeight / 2,
@@ -164,103 +166,226 @@ var camera = new THREE.OrthographicCamera(
   1,
   1000
 );
-camera.position.z = 1;
-scene.add(camera);
-
-var mouse = new THREE.Vector2(0, 0);
+data.camera.position.z = 1;
+data.scene.add(data.camera);
+data.mouse = new THREE.Vector2(0, 0);
 document.body.addEventListener("mousemove", ev => {
   onMouseMove(ev);
 });
 function onMouseMove(event) {
-  TweenMax.to(mouse, 0.5, {
+  TweenMax.to(data.mouse, 0.5, {
     x: (event.clientX / window.innerWidth) * 2 - 1,
     y: -(event.clientY / window.innerHeight) * 2 + 1
   });
   // console.log(mouse);
+ 
 }
+resolve(data);
+}).then(data=>{
+    var video = document.createElement("video");
+    video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v";
+    video.style = "width:100%;height:100%;display:none";
+    video.autoplay = true;
+    video.preload = "auto";
+    video.autoload = "true";
+    video.setAttribute("crossorigin", "anonymous");
+    document.body.appendChild(video);
+    data.video = video
+    return data;
+}).then((data)=>{
+    data.renderer = new THREE.WebGLRenderer();
+    data.renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    data.imageLoader = new THREE.TextureLoader();
+    data.imageLoader.crossOrigin = "anonymous";
+    data.image = data.imageLoader.load(img);
+    // var image2 = loader.load(img2);
+    data.videoTexture = new THREE.VideoTexture(data.video);
+    return data;
+}).then((data)=>{
+    data.image = data.imageLoader.load(img);
+    // var image2 = loader.load(img2);
+    data.videoTexture = new THREE.VideoTexture(data.video);
+    return data;
+}).then((data)=>{
+    data.uniforms = {
+        currentImage: {
+          type: "t",
+          value: data.image
+          // dispFactor :{type : "f", value: 0.0}
+        },
+        hoverImage: {
+          type: "t",
+          value: data.videoTexture
+        },
+        u_mouse: { type: "t", value: data.mouse },
+        u_time: { value: 0 },
+        u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+    };
+    
+    data.mat = new THREE.ShaderMaterial({
+        uniforms: data.uniforms,
+        vertexShader: vertex,
+        fragmentShader: fragment,
+        defines: {
+          PR: window.devicePixelRatio.toFixed(1)
+        }
+        // transparent: true,
+        // opacity: 1.0
+    });
+    data.geometry = new THREE.PlaneBufferGeometry(
+        window.innerWidth,
+        window.innerHeight
+      );
+    return data;
+}).then((data)=>{
+    data.mesh = new THREE.Mesh(data.geometry, data.mat);
+    data.scene.add(data.mesh);
+    data.update = function() {
+        data.uniforms.u_time.value += 0.01;
+      }
+    return data;
+}).then((data)=>{
+    data.renderModel = new RenderPass(data.scene, data.camera);
+    // data.effectBloom = new BloomPass(1.3);
+    data.effectCopy = new ShaderPass(CopyShader);
+    
+    data.composer = new EffectComposer(data.renderer);
+    data.composer.addPass(data.renderModel);
+// composer.addPass( effectBloom );
+data.mesh.position.set(0,0,0);
+    return data;
+}).then((data)=>{
+    data.render = function() {
+        // renderer.clear();
+        if(data.scene){
+            data.composer.render();
+        }
+        // data.composer.render();
+      };
+      
+    data.animate = function() {
+        requestAnimationFrame(data.animate);
+        data.update();
+        // renderer.render(scene, camera);
+        data.render();
+    };
+    data.animate();
 
-var video = document.createElement("video");
-video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v";
-video.style = "width:100%;height:100%;display:none";
-video.autoplay = true;
-video.preload = "auto";
-video.autoload = "true";
-video.setAttribute("crossorigin", "anonymous");
-document.body.appendChild(video);
+    document.body.appendChild(data.renderer.domElement);
+});
+async function initFunction(init){
+    await init;
+}
+initFunction(init);
+
+// var scene = new THREE.Scene();
+// scene.background = new THREE.Color(0x23272a);
+// var camera = new THREE.OrthographicCamera(
+//   window.innerWidth / -2,
+//   window.innerWidth / 2,
+//   window.innerHeight / 2,
+//   window.innerHeight / -2,
+//   1,
+//   1000
+// );
+// camera.position.z = 1;
+// scene.add(camera);
+
+// var mouse = new THREE.Vector2(0, 0);
+// document.body.addEventListener("mousemove", ev => {
+//   onMouseMove(ev);
+// });
+// function onMouseMove(event) {
+//   TweenMax.to(mouse, 0.5, {
+//     x: (event.clientX / window.innerWidth) * 2 - 1,
+//     y: -(event.clientY / window.innerHeight) * 2 + 1
+//   });
+//   // console.log(mouse);
+// }
+
+// var video = document.createElement("video");
+// video.src = "https://defold-game-host.s3-us-west-1.amazonaws.com/splash.m4v";
+// video.style = "width:100%;height:100%;display:none";
+// video.autoplay = true;
+// video.preload = "auto";
+// video.autoload = "true";
+// video.setAttribute("crossorigin", "anonymous");
+// document.body.appendChild(video);
 
 // var renderer = new THREE.WebGLRenderer({alpha:true});
-var renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
+// var renderer = new THREE.WebGLRenderer();
+// renderer.setSize(window.innerWidth, window.innerHeight);
 
-let loader = new THREE.TextureLoader();
-loader.crossOrigin = "anonymous";
-var image = loader.load(img);
-// var image2 = loader.load(img2);
-var videoTexture = new THREE.VideoTexture(video);
+// let loader = new THREE.TextureLoader();
+// loader.crossOrigin = "anonymous";
+// var image = loader.load(img);
+// // var image2 = loader.load(img2);
+// var videoTexture = new THREE.VideoTexture(video);
 
 // videoTexture.minFilter = THREE.LinearFilter;
 // videoTexture.magFilter = THREE.LinearFilter;
 // videoTexture.format = THREE.RGBFormat;
 
-var uniforms = {
-  currentImage: {
-    type: "t",
-    value: image
-    // dispFactor :{type : "f", value: 0.0}
-  },
-  hoverImage: {
-    type: "t",
-    value: videoTexture
-  },
-  u_mouse: { type: "t", value: mouse },
-  u_time: { value: 0 },
-  u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-};
+// var uniforms = {
+//   currentImage: {
+//     type: "t",
+//     value: image
+//     // dispFactor :{type : "f", value: 0.0}
+//   },
+//   hoverImage: {
+//     type: "t",
+//     value: videoTexture
+//   },
+//   u_mouse: { type: "t", value: mouse },
+//   u_time: { value: 0 },
+//   u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+// };
 
-let mat = new THREE.ShaderMaterial({
-  uniforms: uniforms,
-  vertexShader: vertex,
-  fragmentShader: fragment,
-  defines: {
-    PR: window.devicePixelRatio.toFixed(1)
-  }
-  // transparent: true,
-  // opacity: 1.0
-});
-let geometry = new THREE.PlaneBufferGeometry(
-  window.innerWidth,
-  window.innerHeight
-);
+// let mat = new THREE.ShaderMaterial({
+//   uniforms: uniforms,
+//   vertexShader: vertex,
+//   fragmentShader: fragment,
+//   defines: {
+//     PR: window.devicePixelRatio.toFixed(1)
+//   }
+//   // transparent: true,
+//   // opacity: 1.0
+// });
+// let geometry = new THREE.PlaneBufferGeometry(
+//   window.innerWidth,
+//   window.innerHeight
+// );
 
-let object = new THREE.Mesh(geometry, mat);
-scene.add(object);
+// let object = new THREE.Mesh(geometry, mat);
+// scene.add(object);
 
-function update() {
-  uniforms.u_time.value += 0.01;
-}
+// function update() {
+//   uniforms.u_time.value += 0.01;
+// }
 
-var renderModel = new RenderPass(scene, camera);
-var effectBloom = new BloomPass(1.3);
-var effectCopy = new ShaderPass(CopyShader);
+// var renderModel = new RenderPass(scene, camera);
+// var effectBloom = new BloomPass(1.3);
+// var effectCopy = new ShaderPass(CopyShader);
 
-var composer = new EffectComposer(renderer);
+// var composer = new EffectComposer(renderer);
 
-composer.addPass(renderModel);
-// composer.addPass( effectBloom );
-composer.addPass(effectCopy);
+// composer.addPass(renderModel);
+// // composer.addPass( effectBloom );
+// composer.addPass(effectCopy);
 // object.position.set(0,0,0);
 
-let render = function() {
-  // renderer.clear();
-  composer.render();
-};
+// let render = function() {
+//   // renderer.clear();
+//   composer.render();
+// };
 
-let animate = function() {
-  requestAnimationFrame(animate);
-  update();
-  // renderer.render(scene, camera);
-  render();
-};
-animate();
+// let animate = function() {
+//   requestAnimationFrame(animate);
+//   update();
+//   // renderer.render(scene, camera);
+//   render();
+// };
+// animate();
 
-document.body.appendChild(renderer.domElement);
+// document.body.appendChild(renderer.domElement);
