@@ -124,19 +124,23 @@ let fragment = `
             mouse *= -1.;
             vec2 circlePos = st + mouse;
 
-            float c = circle(circlePos, 0.05,1.4)*2.5;
+            float c = circle(circlePos, 0.05,1.8)*2.5;
 
             float offx = v_uv.x + sin(v_uv.y + u_time * .1);
 	        float offy = v_uv.y - u_time * 0.1 - cos(u_time * .001) * .01;
 
-            float n = snoise3(vec3(offx, offy, u_time * .1) * 4.) - 1.;
-
+            float n = snoise3(vec3(offx, offy, u_time * .5) * 4.) - 1.;
+            vec4 color  = vec4(0.4,0.4,0.4,0.2);
             vec2 uv = v_uv;
             vec4 _currentImage;
             vec4 _hoverImage;
             float intensity = 0.3;
-            _currentImage = texture2D(currentImage, uv);
-            _hoverImage = texture2D(hoverImage,uv);
+            // _currentImage = texture2D(currentImage, uv);
+            // _hoverImage = texture2D(hoverImage,uv);
+            float r = abs(sin(u_time))*v_uv.x*v_uv.y;
+            float g = abs(sin(u_time))*v_uv.x*(v_uv.y);
+            float b = abs(cos(u_time))*v_uv.x*(v_uv.y);
+            _hoverImage = vec4(r,g,b,0.7);
             _currentImage  = vec4(0.0,0.0,0.0,0.0);
             float finalMask = smoothstep(0.4, 0.5, n + c);
             vec4 finalImage = mix(_currentImage,_hoverImage,finalMask);
@@ -182,13 +186,13 @@ var image = loader.load(img)
 var image2 = loader.load(img2)
 
 var uniforms =  {
-    currentImage : {
-        type: "t", value: image,
-        // dispFactor :{type : "f", value: 0.0}
-    },
-    hoverImage : {
-        type: "t", value: image2
-    },
+    // currentImage : {
+    //     type: "t", value: image,
+    //     // dispFactor :{type : "f", value: 0.0}
+    // },
+    // hoverImage : {
+    //     type: "t", value: image2
+    // },
     u_mouse: {type: "t",value: mouse},
     u_time: {value: 0},
     u_res: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
