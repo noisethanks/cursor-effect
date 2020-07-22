@@ -137,7 +137,7 @@ let fragment = `
             float intensity = 0.3;
             _currentImage = texture2D(currentImage, uv);
             _hoverImage = texture2D(hoverImage,uv);
-            // _hoverImage  = vec4(0.0,0.0,0.0,0.0);
+            _currentImage  = vec4(0.0,0.0,0.0,0.0);
             float finalMask = smoothstep(0.4, 0.5, n + c);
             vec4 finalImage = mix(_currentImage,_hoverImage,finalMask);
             gl_FragColor = finalImage;
@@ -161,14 +161,14 @@ function onMouseMove(event) {
     // console.log(mouse);
 }
 
-var video = document.createElement("video")
-video.src = 'https://elp-media-public.s3-us-west-1.amazonaws.com/splash.m4v';
-video.id = "video";
-video.style = "width:100%;height:100%;display:none";
+// var video = document.createElement("video")
+// video.src = 'https://elp-media-public.s3-us-west-1.amazonaws.com/splash.m4v';
+// video.id = "video";
+// video.style = "width:100%;height:100%;display:none";
 // video.style = "width:100%;height:100%";
 // video.play();
 
-document.body.appendChild(video)
+// document.body.appendChild(video)
 
 // var videoTexture = THREE.VideoTexture(video);
 // console.log(videoTexture)
