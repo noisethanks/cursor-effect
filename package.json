@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "gsap": "^3.4.0",
+    "gsap": "^3.6.0",
     "regenerator-runtime": "^0.13.5",
     "three": "^0.118.3"
   },
